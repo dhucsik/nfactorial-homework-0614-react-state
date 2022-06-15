@@ -42,6 +42,8 @@ function App() {
 
   const [filterType, setFilterType] = useState("");
 
+  const [searchWord, setSearchWord] = useState("")
+
   const handleChangeItem = (event) => {
     setItemToAdd(event.target.value);
   };
@@ -57,7 +59,6 @@ function App() {
       { label: itemToAdd, key: uuidv4() },
       ...prevItems,
     ]);
-
     setItemToAdd("");
   };
 
@@ -87,6 +88,23 @@ function App() {
     );
   };
 
+  const handleItemImportant = ({ key }) => {
+    setItems((prevItems) =>
+      prevItems.map((item) => {
+        if (item.key === key) {
+          return { ...item, important: !item.important}
+        } else return item
+      })
+    )
+  }
+
+  const handleRemoveItem = (item) => {
+    setItems((prevItems) => [
+      ...prevItems.filter((i) => i.key !== item.key)
+    ])
+    //localStorage.setItem('items', JSON.stringify(items))
+  }
+
   const handleFilterItems = (type) => {
     setFilterType(type);
   };
@@ -95,12 +113,16 @@ function App() {
 
   const amountLeft = items.length - amountDone;
 
+  const handleSearchWord = (event) => {
+    setSearchWord(event.target.value.trim())
+  }
+
   const filteredItems =
     !filterType || filterType === "all"
-      ? items
+      ? items.filter((item) => item.label.toLowerCase().includes(searchWord.toLowerCase()))
       : filterType === "active"
-      ? items.filter((item) => !item.done)
-      : items.filter((item) => item.done);
+      ? items.filter((item) => !item.done && item.label.toLowerCase().includes(searchWord.toLowerCase()))
+      : items.filter((item) => item.done && item.label.toLowerCase().includes(searchWord.toLowerCase()));
 
   return (
     <div className="todo-app">
@@ -118,6 +140,7 @@ function App() {
           type="text"
           className="form-control search-input"
           placeholder="type to search"
+          onChange={handleSearchWord}
         />
         {/* Item-status-filter */}
         <div className="btn-group">
@@ -141,7 +164,7 @@ function App() {
         {filteredItems.length > 0 &&
           filteredItems.map((item) => (
             <li key={item.key} className="list-group-item">
-              <span className={`todo-list-item${item.done ? " done" : ""}`}>
+              <span className={`todo-list-item${item.done ? " done" : ""}${item.important ? " important" : ""}`}>
                 <span
                   className="todo-list-item-label"
                   onClick={() => handleItemDone(item)}
@@ -152,6 +175,7 @@ function App() {
                 <button
                   type="button"
                   className="btn btn-outline-success btn-sm float-right"
+                  onClick={() => handleItemImportant(item)}
                 >
                   <i className="fa fa-exclamation" />
                 </button>
@@ -159,6 +183,7 @@ function App() {
                 <button
                   type="button"
                   className="btn btn-outline-danger btn-sm float-right"
+                  onClick={() => handleRemoveItem(item)}
                 >
                   <i className="fa fa-trash-o" />
                 </button>
